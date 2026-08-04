@@ -3,49 +3,57 @@
 株式会社RSFが運営するオリジナルTシャツサービス「ふくづくりくらぶ」のサイト一式。
 静的HTML／CSS／JS。ビルドはPython標準ライブラリのみで動く。
 
-## 構成
+## リポジトリ直下の構成
+
+このREADMEと同じ階層に以下が並んでいること。
+`.github` がリポジトリ直下にないと、ワークフローが認識されない。
 
 ```
-index.html          トップページ（プレビュー版：noindex入り）
-tokushoho.html      特定商取引法に基づく表記
-privacy.html        プライバシーポリシー
-404.html            404ページ
-site.webmanifest    Web App Manifest
-build.py            公開用ビルド（dist/ を生成）
-assets/
-  style.css         全ページ共通スタイル
-  script.js         ナビゲーション開閉のみ
-  hero-people.webp  FV画像（1600x809）
-  hero-people.jpg   FV画像フォールバック
-  ogp.jpg           OGP画像（1200x630）
-  favicon.svg / icon-192.png / icon-512.png
 .github/workflows/deploy.yml   Pagesへの自動ビルド＆デプロイ
+index.html                     トップページ（noindex入りのソース）
+tokushoho.html                 特定商取引法に基づく表記
+privacy.html                   プライバシーポリシー
+404.html                       404ページ
+site.webmanifest
+build.py                       公開用ビルド（dist/ を生成）
+.gitignore
+assets/
+  style.css  script.js
+  hero-people.webp / hero-people.jpg   FV画像 1600x809
+  ogp.jpg                              OGP画像 1200x630
+  favicon.svg  icon-192.png  icon-512.png
 ```
 
-## GitHubへの上げ方
+## 公開手順
 
-1. リポジトリを作成してこのフォルダの中身をpush（ブランチ名は `main`）
-2. リポジトリの Settings > Pages > Source を **GitHub Actions** に変更
-3. pushすると deploy.yml が走り、`dist/` の内容が公開される
+1. リポジトリ直下にこのフォルダの中身を置いて push（ブランチは `main`）
+2. Settings > Pages > Source を **GitHub Actions** に変更
+3. Actions タブで `Deploy to GitHub Pages` が緑になるのを待つ
 
-公開URLはワークフローが自動で決める。
+Source が「Deploy from a branch」のままだとビルドが走らず、
+noindex が付いたソースがそのまま公開される。canonical、OGP画像、
+構造化データ、sitemap.xml も生成されない。必ず GitHub Actions を選ぶこと。
+
+### 公開URL
+
+ワークフローが自動で決める。
 
 - 既定：`https://<owner>.github.io/<repo>/`
 - カスタムドメイン：Settings > Secrets and variables > Actions > Variables に
-  `SITE_BASE_URL`（例 `https://fukuzukuri.example.com/`）を登録すると、そちらが優先される
+  `SITE_BASE_URL`（末尾スラッシュ付き。例 `https://fukuzukuri.example.com/`）を登録
 
-Pagesの Source を「Deploy from a branch」にすると **ビルドが走らずnoindexのまま公開される**。
-必ず GitHub Actions を選ぶこと。
+リポジトリ名がそのまま公開URLになるので、SNSやLINEに貼る前に名前を確定させること。
+リネームすれば次の push で新URLを拾い直す。
 
-## ローカルでの確認
+## ローカル確認
 
 `index.html` をそのままブラウザで開けば見た目は確認できる。
 ソースには誤公開防止の `noindex,nofollow` が入っている（ビルド時に自動で外れる）。
 
-公開後と同じ状態を手元で確認したい場合：
+公開後と同じ状態を確認したい場合：
 
 ```bash
-python build.py --base-url https://wg-ryo-a.github.io/fukuzukuri-club/
+python build.py --base-url https://wg-ryo-a.github.io/huku/
 cd dist && python -m http.server 8000
 ```
 
@@ -62,8 +70,20 @@ cd dist && python -m http.server 8000
 python build.py --base-url https://example.com/ --line-url https://lin.ee/xxxxxxx
 ```
 
-ワークフローには、noindexの残留・canonical・og:image・構造化データの有無を検査する
+ワークフローには noindex の残留・canonical・og:image・構造化データの有無を検査する
 ステップが入っている。どれか欠けるとデプロイは失敗する。
+
+## 編集時の注意
+
+FVを差し替えるなど大きく作り直したときに、以下が巻き戻りやすい。
+過去に一度全部戻ったことがあるので、`git diff` で確認すること。
+
+- LINE URLの `%40` エンコード（`@` のままでも動くがLINE側の推奨外）
+- 画像の `width` / `height` と CSS の `aspect-ratio`（実ファイルは 1600x809）
+- ヘッダーの `white-space: nowrap` と 380px未満タイア
+- `section[id], main[id]` の `scroll-margin-top`
+- 注文フローの8カラムグリッド
+- 特商法の「サイト名・屋号」行
 
 ---
 
@@ -73,15 +93,11 @@ python build.py --base-url https://example.com/ --line-url https://lin.ee/xxxxxx
 
 現在のリンク先は `https://line.me/R/ti/p/%40116fanfi`。
 この `@116fanfi` は他事業で使っているアカウントIDと同一。
-ふくづくりくらぶ専用アカウントを取るなら、`build.py --line-url` で差し替えるか、
-HTML内の5箇所を直接置換すること。
+専用アカウントを取ったら `build.py --line-url` で差し替えるか、
+`index.html` 内の6箇所を直接置換すること。
 
 流用したままだと、Tシャツの相談と他事業の問い合わせが同じトークに混在し、
 友だち追加経路の分析も切り分けられない。
-
-なおURL形式は、LINE Developersの仕様に従い `@` をパーセントエンコード（`%40`）済み。
-未エンコードでも動作はするが非推奨とされているため。
-管理画面が発行する `lin.ee` の短縮URLでも可。
 
 ### 2. 電話番号
 
@@ -91,13 +107,10 @@ HTML内の5箇所を直接置換すること。
 ### 3. 画像の中身
 
 `hero-people.jpg` と `ogp.jpg` は目視確認が未了。
-焼き込み文字の残りや生成画像特有の破綻がないか確認すること。
 
 ---
 
 ## 未確定のため、あえて書いていない事業データ
-
-事実を作らず「注文確定前に個別提示」としている項目：
 
 - ボディの商品名・メーカー・オンス数
 - サイズ表、カラー一覧
@@ -105,5 +118,5 @@ HTML内の5箇所を直接置換すること。
 - 通常納期の目安
 - 実物の作例写真（現状はFV画像を商品仕様セクションでも流用している）
 
-作例写真と、せめてサイズ展開・カラー数は、確定次第入れたほうがいい。
+作例写真と、サイズ展開・カラー数は確定次第入れる。
 商品仕様セクションは6項目中4項目が「要相談」で、閲覧者の疑問が解けていない。
