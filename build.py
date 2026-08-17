@@ -31,7 +31,7 @@ PAGES = ("index.html", "tokushoho.html", "privacy.html")
 EXTRA_FILES = ("site.webmanifest", "404.html")
 
 NOINDEX_LINE = '  <meta name="robots" content="noindex,nofollow" data-build-remove>\n'
-THEME_LINE = '  <meta name="theme-color" content="#007a73">\n'
+THEME_LINE = '  <meta name="theme-color" content="#075985">\n'
 OG_LOCALE_LINE = '  <meta property="og:locale" content="ja_JP">\n'
 
 COMPANY = {
